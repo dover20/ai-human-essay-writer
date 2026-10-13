@@ -1,0 +1,99 @@
+# humanwrite configuration. Every tunable lives here.
+
+# --- LLM endpoint ---------------------------------------------------------
+# OpenAI-compatible base URL (no trailing slash). "api_style: auto" tries
+# /chat/completions first and falls back to /api/chat (llama-server).
+endpoint: http://10.60.50.11:9292/v1
+model: Qwen3.8-27B
+api_key: not-needed
+api_style: auto            # auto | openai | llama
+timeout_seconds: 1800        # generous: reasoning models think for a while
+max_retries: 3
+# Extra keys merged verbatim into every chat request body. Empty by default:
+# thinking stays ON. If a model burns its whole budget on reasoning and
+# returns empty content, either raise sampling.max_tokens or force thinking
+# off with:
+# extra_body:
+#   chat_template_kwargs:
+#     enable_thinking: false
+extra_body: {}
+
+# --- sampling -------------------------------------------------------------
+# High temperature on purpose: the point is that the token distribution is
+# the local model's, not a smoothed-out one.
+sampling:
+  temperature: 1.1
+  top_p: 0.95
+  presence_penalty: 1.0
+  n_candidates: 3
+  max_tokens: 65536        # big: thinking model's thinking budget (32768)
+                           # must fit inside this along with the content
+
+# --- quantitative gate (final.md vs the rough draft) -----------------------
+gate:
+  fk_tolerance: 2.0            # FK grade within +-2.0 of the rough draft
+  msl_ratio_low: 0.80          # mean sentence length ratio band
+  msl_ratio_high: 1.25
+  ttr_ratio_low: 0.85          # TTR ratio band
+  ttr_ratio_high: 1.15
+  contraction_rel_diff_max: 0.50   # relative diff in contraction rate/100w
+  contraction_abs_diff_max: 1.0    # absolute diff, used when rough rate is low
+  contraction_low_threshold: 1.0   # "low" = below this rate (per 100 words)
+  anchor_min: 0.30             # min fraction of final sentences anchored to rough
+  anchor_jaccard_min: 0.85     # "near-identical" token Jaccard threshold
+  length_ratio_low: 0.9        # final word count band (x rough)
+  length_ratio_high: 1.5
+  max_repair_iterations: 3
+  max_notes_words: 0           # --notes word cap; 0 = unlimited (204800-token
+                               # ctx window holds the full source material)
+
+# --- pass 3 (constrain) ----------------------------------------------------
+constrain:
+  section_proportion_tolerance: 0.20   # section lengths within 20% of rough
+  error_budget_per_500_words: 3        # max errors to re-introduce
+  humanizer_length_tolerance: 0.10     # pass 2 length band (+/-10%)
+
+# --- tell scan --------------------------------------------------------------
+# Vocabulary list drives both the humanizer prompt (references/ai_tells.md
+# points here) and tell_scan.py. Extend freely.
+tell_scan:
+  repeated_opening_min: 7    # T05: an opening word repeated >= this many times
+                             # is a tic (3-5 is normal student prose, not a tell)
+  vocabulary:
+    - delve
+    - landscape
+    - tapestry
+    - testament
+    - pivotal
+    - seamless
+    - robust
+    - elevate
+    - foster
+    - leverage
+    - crucial
+    - realm
+    - showcasing
+    - underscore
+    - unlock
+    - navigate
+    - intricate
+    - multifaceted
+    - utilize
+    - meticulous
+    - paramount
+    - synergy
+    - holistic
+    - game-changer
+  ing_riders:
+    - symbolizing
+    - reflecting
+    - showcasing
+    - underscoring
+    - highlighting
+    - demonstrating
+    - exemplifying
+    - signifying
+    - emphasizing
+    - emphasising
+  extra_words: []          # append-only additions to vocabulary
+  disabled_patterns: []    # e.g. [T16] to allow curly quotes

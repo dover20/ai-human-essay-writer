@@ -1,0 +1,10 @@
+.pytest_cache/
+__pycache__
+.venv/
+
+out/
+english-paper-context/
+
+CLAUDE.md
+.claude/
+CONTEXT.md
